@@ -27,8 +27,15 @@ def create_html_file(media_files, target_file, media_dir, subfolder_name, templa
 
     media_blocks = []
     for media_file in media_files:
-        media_path = os.path.relpath(os.path.join(media_dir, media_file), os.path.dirname(target_file))
-        absolute_path = os.path.abspath(os.path.join(media_dir, media_file)).replace("\\", "/")
+        full_media_path = os.path.abspath(os.path.join(media_dir, media_file))
+        absolute_path = full_media_path.replace("\\", "/")  # normalize for JS string
+
+        try:
+            media_path = os.path.relpath(os.path.join(media_dir, media_file), os.path.dirname(target_file))
+        except ValueError:
+            # Drives are different; fallback to absolute file URL
+            absolute_path = os.path.abspath(os.path.join(media_dir, media_file))
+            media_path = "file:///" + absolute_path.replace("\\", "/")
 
         if media_file.lower().endswith(('.jpg', '.jpeg', '.png')):
             media_blocks.append(f'''
