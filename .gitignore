@@ -1,2 +1,22 @@
 fileLists/
 push.txt
+
+# Ignore build artifacts
+build/
+dist/
+
+# Ignore PyInstaller .spec files
+*.spec
+
+# Ignore Python cache files
+__pycache__/
+*.py[cod]
+*.pyo
+
+# Ignore virtual environments
+venv/
+env/
+
+# Ignore IDE/editor folders
+.vscode/
+.idea/
