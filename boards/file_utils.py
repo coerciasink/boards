@@ -21,13 +21,13 @@ href_link = Path(masterDir, "index-index.html").absolute().as_uri()
 
 
 
-def create_html_file(media_files, target_file, media_dir, subfolder_name, template_path= 'templates/template.html'):
+def create_html_file(media_files, target_file, media_dir, subfolder_name, template_path= 'templates/template.html', full_paths=None):
     with open(template_path, "r", encoding="utf-8") as template:
         html_template = template.read()
 
     media_blocks = []
-    for media_file in media_files:
-        full_media_path = os.path.abspath(os.path.join(media_dir, media_file))
+    for idx, media_file in enumerate(media_files):
+        full_media_path = full_paths[idx] if full_paths else os.path.join(media_dir, media_file)
         absolute_path = full_media_path.replace("\\", "/")  # normalize for JS string
 
         try:
