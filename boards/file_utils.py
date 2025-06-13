@@ -2,6 +2,7 @@ import os
 from collections import defaultdict
 from pathlib import Path
 import yaml
+from jinja2 import Template
 
 def load_config(yml_path="config.yml"):
     with open(yml_path, "r", encoding="utf-8") as f:
@@ -103,11 +104,12 @@ def create_index_file(subfolders, target_directory, template_path='templates/ind
 
 
 
-def create_css_file(target_directory, css_template_path='templates/template.css'):
-    with open(css_template_path, "r", encoding="utf-8") as template:
-        css_content = template.read()
-    with open(os.path.join(target_directory, "styles.css"), "w", encoding="utf-8") as f:
-        f.write(css_content)
+def create_css_file(target_directory, config, css_template_path='templates/template.css'):
+    with open(css_template_path, "r", encoding="utf-8") as template_file:
+        template = Template(template_file.read())
+        rendered_css = template.render(config)
+    with open(os.path.join(target_directory, "styles.css"), "w", encoding="utf-8") as output_file:
+        output_file.write(rendered_css)
 
 
 def create_js_file(target_directory, js_template_path='templates/template.js'):

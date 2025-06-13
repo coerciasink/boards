@@ -21,5 +21,6 @@ def getDirList(csvList, masterDir):
                 # Prepend masterDir to target_directory
                 row["target_directory"] = os.path.join(masterDir, row["target_directory"])
                 all_rows.append(row)
+    # print(all_rows)
     return all_rows
 

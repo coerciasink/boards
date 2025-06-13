@@ -4,8 +4,9 @@
     <title>{{title}}</title>
     <link rel="stylesheet" type="text/css" href="styles.css">
     <script src="script.js"></script>
-    <style>html { scroll-behavior: smooth; }</style>
+    <!-- <style>html { scroll-behavior: smooth; }</style> -->
 </head>
+<!-- <body class="horizontal-mode"> -->
 <body>
     <h1>{{title}}</h1>
     <a href="index.html">Back to Index</a>
@@ -14,9 +15,16 @@
         <label for="columnCountInput">Column Count: </label>
         <input type="number" id="columnCountInput" min="1" max="10" value="5">
     </div>
+   
+    <!-- <div>
+        <button onclick="document.body.classList.toggle('horizontal-mode')">Toggle Layout</button>
+    </div> -->
 
     <div class="masonry-container">
+        <!-- <div class="masonry-column"> -->
         {{media_content}}
+        <!-- </div> -->
     </div>
+
 </body>
 </html>
