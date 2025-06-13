@@ -36,7 +36,7 @@ csvList = args.csvs if args.csvs else config.get("csvList", [])
 
 
 config = {
-    'col_count': args.col_count if args.col_count else config.get("col_count", []),
+    'col_count': args.col if args.col else config.get("col_count", []),
     'margin': args.margin if args.margin else config.get("margin", []),
 }
 
