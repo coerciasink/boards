@@ -10,6 +10,10 @@ You can change the number of columns shown.
 
 ## how to 
 
+`python3 __main__.py`
+
+that's it. following will show how to use the config.yml and use flags.
+
 input your masterDir in the config.yml, the dir in which you want to store the created html files. 
 
 Then create a csv file in the fileLists Folder.
@@ -20,6 +24,8 @@ You can change the csv filenames as you wish, add more or remove existing.
 use --csvs flag to provide a list of csv files. If this isn't used, it will fallback to the directories mentioned in the config.yml.
 
 You can also also set the margins in px and the column count in config, or by providing arguments. 
+
+All the flags are optional.
 
 This is what you would get if you used the flag --help.
 
@@ -46,6 +52,11 @@ options:
 
 That should be it. 
 
+use this if you want to compile the app to a single binary. I am too lazy to release as precompiled binary files.
+
+`pyinstaller --onefile __main__.py -n boards`
+
+
 
 ## Future to-dos
 
@@ -62,6 +73,7 @@ That should be it.
 - [ ] sort by option
 - [ ] add an option to copy a list of images to clipboard
 - [ ] example site
+- [ ] add the masterDir flag
 - [x] Random 100 pins from a folder feature. 
 	- [x] You can also make this a static site feature, 
 	- [x] add the utility in the python project instead of thr final product. The arguement will specify which directory to use.
