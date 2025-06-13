@@ -20,3 +20,6 @@ env/
 # Ignore IDE/editor folders
 .vscode/
 .idea/
+
+# ignore exe files 
+*.exe
