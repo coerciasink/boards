@@ -3,3 +3,5 @@ csvList:
   - fileLists/misc.csv
   - fileLists/onSsd.csv
   - fileLists/pinterest.csv
+margin: 20
+col_count: 5

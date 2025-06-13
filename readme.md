@@ -19,13 +19,38 @@ You can change the csv filenames as you wish, add more or remove existing.
 
 use --csvs flag to provide a list of csv files. If this isn't used, it will fallback to the directories mentioned in the config.yml.
 
+You can also also set the margins in px and the column count in config, or by providing arguments. 
+
+This is what you would get if you used the flag --help.
+
+```
+usage: __main__.py [-h] [--random RANDOM] [--ranDir RANDIR]
+                [--dir DIR] [--csvs CSVS [CSVS ...]]
+                [--col COL] [--margin MARGIN]
+
+Generate HTML for media directories.
+
+options:
+-h, --help            show this help message and exit
+--random RANDOM       Select N random images from a directory   
+                        and generate HTML.
+--ranDir RANDIR       Directory to search images in for
+                        --random
+--dir DIR             Directory to use for the images
+--csvs CSVS [CSVS ...]
+                        List of CSV files to use
+--col COL             number of columns to default to
+                        (default: 5)
+--margin MARGIN       Margin in px
+```
+
 That should be it. 
 
 
 ## Future to-dos
 
+- [ ] Horizonatal layout. 
 - [ ] make it so that it can push to a github pages site.
-- [ ] Make the bash file better, make the bash file do the above task.
 - [x] Clean the code, organise it and put it on github
 - [x] Fix nested folders not being links issue.
 - [x] Get the list of target and destination folders from a csv file or a txt file.
@@ -37,3 +62,6 @@ That should be it.
 - [ ] sort by option
 - [ ] add an option to copy a list of images to clipboard
 - [ ] example site
+- [x] Random 100 pins from a folder feature. 
+	- [x] You can also make this a static site feature, 
+	- [x] add the utility in the python project instead of thr final product. The arguement will specify which directory to use.

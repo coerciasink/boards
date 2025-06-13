@@ -18,8 +18,8 @@ parser.add_argument('--random', type=int, help="Select N random images from a di
 parser.add_argument('--ranDir', type=str, help="Directory to search images in for --random")
 parser.add_argument('--dir', type=str, help="Directory to use for the images")
 parser.add_argument('--csvs', nargs='+', help='List of CSV files to use')
-parser.add_argument('--col', type=int, default=5, help='number of columns to default to (default: 5)')
-parser.add_argument('--margin', type=int, default=20, help='Margin in px')
+parser.add_argument('--col', type=int, help='number of columns to default to (default is set in the config)')
+parser.add_argument('--margin', type=int, help='Margin in px (default is set in the config)')
 args = parser.parse_args()
 
 config = load_config()
@@ -32,9 +32,12 @@ masterDir = config["masterDir"]
 # Determine CSV list
 csvList = args.csvs if args.csvs else config.get("csvList", [])
 
+
+
+
 config = {
-    'col_count': args.col,
-    'margin': args.margin
+    'col_count': args.col_count if args.col_count else config.get("col_count", []),
+    'margin': args.margin if args.margin else config.get("margin", []),
 }
 
 
