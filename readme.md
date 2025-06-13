@@ -67,7 +67,7 @@ use this if you want to compile the app to a single binary. I am too lazy to rel
 - [x] Get the list of target and destination folders from a csv file or a txt file.
 - [ ] hide image option
 - [ ] Long press to open image in new tab
-- [ ] start image option
+- [ ] star image option
 - [ ] Bookmark location so that we can come to that part later
 - [ ] Randomise button. Randomisation should be temporary, only till the tab is open. 
 - [ ] sort by option
