@@ -2,10 +2,12 @@
 
 ## what this does
 
-it takes directories filled with pics and sub directories filled with pics, and converts it into html files linking to those images. 
+It takes directories filled with pics and sub directories filled with pics, and converts it into html files linking to those images. It will mimic the original file structure.
 The images are arranged in a masonry format (looks like pinterest).
+You can also create a file filled with images chosen randomly from a directory.
 Click on the image to copy the image path.
 You can change the number of columns shown.
+Ignore the 'toggle layout' button for now.
 
 
 ## how to 
@@ -22,8 +24,11 @@ Fill the first column with the absolute path of the directory with the images, a
 You can change the csv filenames as you wish, add more or remove existing.
 
 use --csvs flag to provide a list of csv files. If this isn't used, it will fallback to the directories mentioned in the config.yml.
+You can choose a single directory using the --dir command.
 
 You can also also set the margins in px and the column count in config, or by providing arguments. 
+
+If you want to have a specific directory be used and select random N number of random images from it, you can do so. 
 
 All the flags are optional.
 
@@ -74,6 +79,7 @@ use this if you want to compile the app to a single binary. I am too lazy to rel
 - [ ] add an option to copy a list of images to clipboard
 - [ ] example site
 - [ ] add the masterDir flag
+- [ ] release precompiled binaries for win and mac. Linux users don't need this help tbh.
 - [x] Random 100 pins from a folder feature. 
 	- [x] You can also make this a static site feature, 
 	- [x] add the utility in the python project instead of thr final product. The arguement will specify which directory to use.
