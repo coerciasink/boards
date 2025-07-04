@@ -16,6 +16,9 @@ Ignore the 'toggle layout' button for now.
 
 that's it. following will show how to use the config.yml and use flags.
 
+Install the requirements first.
+`python3 -m pip install -r requirements.txt`
+
 input your masterDir in the config.yml, the dir in which you want to store the created html files. 
 
 Then create a csv file in the fileLists Folder.

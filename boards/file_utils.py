@@ -41,7 +41,7 @@ def create_html_file(media_files, target_file, media_dir, subfolder_name, templa
         if media_file.lower().endswith(('.jpg', '.jpeg', '.png')):
             media_blocks.append(f'''
                 <div class="masonry-item">
-                    <a href="#" onclick="copyToClipboard('{absolute_path}'); event.preventDefault();">
+                    <a href="#" onclick="copyToClipboard('{media_path}'); event.preventDefault();">
                         <img src="{media_path}" alt="{media_file}">
                     </a>
                 </div>

@@ -1,0 +1,6 @@
+dotenv
+tqdm
+requests
+pathlib
+pyyaml
+jinja2

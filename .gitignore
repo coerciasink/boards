@@ -23,3 +23,6 @@ env/
 
 # ignore exe files 
 *.exe
+
+# ignore .env
+.env
