@@ -1,8 +1,12 @@
 import os
 from collections import defaultdict
 from pathlib import Path
-import yaml
+import psycopg2
 from jinja2 import Template
+import yaml
+
+from boards.imgchest import process_images
+
 
 def load_config(yml_path="config.yml"):
     with open(yml_path, "r", encoding="utf-8") as f:
@@ -22,45 +26,200 @@ href_link = Path(masterDir, "index-index.html").absolute().as_uri()
 
 
 
-def create_html_file(media_files, target_file, media_dir, subfolder_name, template_path= 'templates/template.html', full_paths=None):
+# def create_html_file(media_files, target_file, media_dir, subfolder_name, template_path= 'templates/template.html', full_paths=None, decideUpload=False):
+#     with open(template_path, "r", encoding="utf-8") as template:
+#         html_template = template.read()
+
+#     if decideUpload == True:
+#         media_blocks = []
+#         media_files_full = []
+#         # This loop basically converts the media files list items to their full paths. this was done inside the loop but for uploadin i think I need to do this.
+#         for idx, media_file in enumerate(media_files):
+#             media_files_full = []
+#             full_media_path = full_paths[idx] if full_paths else os.path.join(media_dir, media_file)
+#             absolute_path = full_media_path.replace("\\", "/")  # normalize for JS string
+#             media_files_full.append(absolute_path)
+
+#         media_files = media_files_full
+
+#         media_files = process_images(media_files)
+#         for idx, media_file in enumerate(media_files):
+#             # full_media_path = full_paths[idx] if full_paths else os.path.join(media_dir, media_file)
+#             # absolute_path = full_media_path.replace("\\", "/")  # normalize for JS string
+
+#             # Now send these files to imgchest utility
+
+            
+
+#             # try:
+#             #     media_path = os.path.relpath(os.path.join(media_dir, media_file), os.path.dirname(target_file))
+#             # except ValueError:
+#             #     # Drives are different; fallback to absolute file URL
+#             #     # absolute_path = os.path.abspath(os.path.join(media_dir, media_file))
+#             #     # media_path = "file:///" + absolute_path.replace("\\", "/")
+
+
+#             if media_file.lower().endswith(('.jpg', '.jpeg', '.png')):
+#                 media_blocks.append(f'''
+#                     <div class="masonry-item">
+#                         <a href="#" onclick="copyToClipboard('{media_path}'); event.preventDefault();">
+#                             <img src="{media_path}" alt="{media_file}">
+#                         </a>
+#                     </div>
+#                 ''')
+#             # elif media_file.lower().endswith(('.mp4', '.avi', '.mov')):
+#             #     media_blocks.append(f'''
+#             #         <div class="masonry-item">
+#             #             <video width="300" controls>
+#             #                 <source src="{media_path}" type="video/mp4">
+#             #                 Your browser does not support the video tag.
+#             #             </video>
+#             #         </div>
+#             #     ''')
+
+#     else:
+#         media_blocks = []
+#         for idx, media_file in enumerate(media_files):
+#             full_media_path = full_paths[idx] if full_paths else os.path.join(media_dir, media_file)
+#             absolute_path = full_media_path.replace("\\", "/")  # normalize for JS string
+
+#             try:
+#                 media_path = os.path.relpath(os.path.join(media_dir, media_file), os.path.dirname(target_file))
+#             except ValueError:
+#                 # Drives are different; fallback to absolute file URL
+#                 absolute_path = os.path.abspath(os.path.join(media_dir, media_file))
+#                 media_path = "file:///" + absolute_path.replace("\\", "/")
+
+#             if media_file.lower().endswith(('.jpg', '.jpeg', '.png')):
+#                 media_blocks.append(f'''
+#                     <div class="masonry-item">
+#                         <a href="#" onclick="copyToClipboard('{media_path}'); event.preventDefault();">
+#                             <img src="{media_path}" alt="{media_file}">
+#                         </a>
+#                     </div>
+#                 ''')
+#             elif media_file.lower().endswith(('.mp4', '.avi', '.mov')):
+#                 media_blocks.append(f'''
+#                     <div class="masonry-item">
+#                         <video width="300" controls>
+#                             <source src="{media_path}" type="video/mp4">
+#                             Your browser does not support the video tag.
+#                         </video>
+#                     </div>
+#                 ''')
+
+#     html_content = html_template.replace("{{title}}", subfolder_name)
+#     html_content = html_content.replace("{{media_content}}", "\n".join(media_blocks))
+
+#     with open(target_file, "w", encoding="utf-8") as f:
+#         f.write(html_content)
+
+# def create_html_file(media_files, target_file, media_dir, subfolder_name, template_path= 'templates/template.html', full_paths=None, decideUpload=False):
+#     if decideUpload:
+#         media_files_full = []
+
+#         for idx, media_file in enumerate(media_files):
+#             full_media_path = full_paths[idx] if full_paths else os.path.join(media_dir, media_file)
+#             media_files_full.append(full_media_path.replace("\\", "/"))  # Normalize path for cross-platform
+
+#         # Upload all full image paths
+#         uploaded_urls = process_images(media_files_full)
+
+#         media_blocks = []
+#         for idx, uploaded_url in enumerate(uploaded_urls):
+#             ext = os.path.splitext(media_files[idx])[1].lower()
+#             if ext in ('.jpg', '.jpeg', '.png'):
+#                 media_blocks.append(f'''
+#                     <div class="masonry-item">
+#                         <a href="#" onclick="copyToClipboard('{uploaded_url}'); event.preventDefault();">
+#                             <img src="{uploaded_url}" alt="{media_files[idx]}">
+#                         </a>
+#                     </div>
+#                 ''')
+#             elif ext in ('.mp4', '.avi', '.mov'):
+#                 # Not uploaded (Imgchest doesn't support it), fallback to local file path
+#                 local_video_path = os.path.relpath(media_files_full[idx], os.path.dirname(target_file)).replace("\\", "/")
+#                 media_blocks.append(f'''
+#                     <div class="masonry-item">
+#                         <video width="300" controls>
+#                             <source src="{local_video_path}" type="video/mp4">
+#                             Your browser does not support the video tag.
+#                         </video>
+#                     </div>
+#                 ''')
+
+
+def create_html_file(media_files, target_file, media_dir, subfolder_name, template_path='templates/template.html', full_paths=None, decideUpload=False):
     with open(template_path, "r", encoding="utf-8") as template:
         html_template = template.read()
 
     media_blocks = []
-    for idx, media_file in enumerate(media_files):
-        full_media_path = full_paths[idx] if full_paths else os.path.join(media_dir, media_file)
-        absolute_path = full_media_path.replace("\\", "/")  # normalize for JS string
 
-        try:
-            media_path = os.path.relpath(os.path.join(media_dir, media_file), os.path.dirname(target_file))
-        except ValueError:
-            # Drives are different; fallback to absolute file URL
-            absolute_path = os.path.abspath(os.path.join(media_dir, media_file))
-            media_path = "file:///" + absolute_path.replace("\\", "/")
+    if decideUpload:
+        media_files_full = []
 
-        if media_file.lower().endswith(('.jpg', '.jpeg', '.png')):
-            media_blocks.append(f'''
-                <div class="masonry-item">
-                    <a href="#" onclick="copyToClipboard('{media_path}'); event.preventDefault();">
-                        <img src="{media_path}" alt="{media_file}">
-                    </a>
-                </div>
-            ''')
-        elif media_file.lower().endswith(('.mp4', '.avi', '.mov')):
-            media_blocks.append(f'''
-                <div class="masonry-item">
-                    <video width="300" controls>
-                        <source src="{media_path}" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
-                </div>
-            ''')
+        for idx, media_file in enumerate(media_files):
+            full_media_path = full_paths[idx] if full_paths else os.path.join(media_dir, media_file)
+            media_files_full.append(full_media_path.replace("\\", "/"))
+
+        uploaded_urls = process_images(media_files_full)
+
+        for idx, uploaded_url in enumerate(uploaded_urls):
+            ext = os.path.splitext(media_files[idx])[1].lower()
+            try:
+                media_blocks.append(f'''
+                    <div class="masonry-item">
+                        <a href="#" onclick="copyToClipboard('{uploaded_url}'); event.preventDefault();">
+                            <img src="{uploaded_url}" alt="{media_files[idx]}">
+                        </a>
+                    </div>
+                ''')
+            except:
+                # most probably happens if it is a video, so no case for images added. yes, bad programming practice.
+                media_blocks.append(f'''
+                    <div class="masonry-item">
+                        <video width="300" controls>
+                            <source src="{full_paths[idx]}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                ''')
+    else:
+        for idx, media_file in enumerate(media_files):
+            full_media_path = full_paths[idx] if full_paths else os.path.join(media_dir, media_file)
+            absolute_path = full_media_path.replace("\\", "/")
+
+            try:
+                media_path = os.path.relpath(full_media_path, os.path.dirname(target_file)).replace("\\", "/")
+            except ValueError:
+                absolute_path = os.path.abspath(full_media_path)
+                media_path = "file:///" + absolute_path.replace("\\", "/")
+
+            ext = os.path.splitext(media_file)[1].lower()
+            if ext in ('.jpg', '.jpeg', '.png'):
+                media_blocks.append(f'''
+                    <div class="masonry-item">
+                        <a href="#" onclick="copyToClipboard('{media_path}'); event.preventDefault();">
+                            <img src="{media_path}" alt="{media_file}">
+                        </a>
+                    </div>
+                ''')
+            elif ext in ('.mp4', '.avi', '.mov'):
+                media_blocks.append(f'''
+                    <div class="masonry-item">
+                        <video width="300" controls>
+                            <source src="{media_path}" type="video/mp4">
+                            Your browser does not support the video tag.
+                        </video>
+                    </div>
+                ''')
 
     html_content = html_template.replace("{{title}}", subfolder_name)
     html_content = html_content.replace("{{media_content}}", "\n".join(media_blocks))
 
     with open(target_file, "w", encoding="utf-8") as f:
         f.write(html_content)
+
 
 
 

@@ -1,11 +1,17 @@
 import os
 import yaml
 import argparse
+import time
+import yaml
 
 # from boards.image_utils import get_image_names
+start_time = time.time()
+
+
 from boards.file_utils import create_html_file, create_css_file, create_js_file, create_index_file, create_master_index_file
 from boards.dir_utils import getDirList
 from boards.ranPick import gen_random
+from boards.imgchest import process_images
 
 
 def load_config(yml_path="config.yml"):
@@ -20,6 +26,7 @@ parser.add_argument('--dir', type=str, help="Directory to use for the images")
 parser.add_argument('--csvs', nargs='+', help='List of CSV files to use')
 parser.add_argument('--col', type=int, help='number of columns to default to (default is set in the config)')
 parser.add_argument('--margin', type=int, help='Margin in px (default is set in the config)')
+parser.add_argument('--upload', action='store_true', help='Upload images to Imgchest and replace local paths with uploaded URLs')
 args = parser.parse_args()
 
 config = load_config()
@@ -31,8 +38,6 @@ masterDir = config["masterDir"]
 
 # Determine CSV list
 csvList = args.csvs if args.csvs else config.get("csvList", [])
-
-
 
 
 config = {
@@ -86,8 +91,9 @@ for directory_info in directories:
         output_file = os.path.join(target_directory, subfolder_file)
 
         os.makedirs(os.path.dirname(output_file), exist_ok=True)  #  Ensure parent directory exists
+        # uploaded_links = process_images(files) # upload
 
-        create_html_file(files, output_file, subfolder_path, subfolder)
+        create_html_file(files, output_file, subfolder_path, subfolder, decideUpload=args.upload)
 
 
     # Create main index file linking to all subfolder pages
@@ -103,3 +109,6 @@ for directory_info in directories:
 
 create_css_file(masterDir, config)
 create_js_file(masterDir)
+
+elapsed_time = time.time() - start_time
+print(f"\n✅ Finished in {elapsed_time:.2f} seconds.")

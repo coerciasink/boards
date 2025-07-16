@@ -1,5 +1,6 @@
 fileLists/
 push.txt
+config.yml
 
 # Ignore build artifacts
 build/

@@ -1,72 +1,103 @@
 import os
 import hashlib
-import json
 import requests
-from tqdm import tqdm
+from pathlib import Path
 from dotenv import load_dotenv
+import psycopg2
 
-# CONFIG
-IMG_FOLDER = 'path/to/images'
-HASH_RECORD_FILE = 'imgchest_hashes.json'
-# IMG_CHEST_TOKEN = 'YOUR_IMG_CHEST_API_TOKEN' Uncomment if not using config.yml
-IMG_CHEST_UPLOAD_URL = 'https://api.imgchest.com/v1/file'
+# Load the .env file
+load_dotenv()
 
-HEADERS = {
-    "Authorization": f"Bearer {IMG_CHEST_TOKEN}"
-}
+IMG_CHEST_API_KEY = os.getenv("IMG_CHEST_API_KEY")
+HEADERS = {"Authorization": f"Bearer {IMG_CHEST_API_KEY}"}
 
-# Load or initialize hash record
-if os.path.exists(HASH_RECORD_FILE):
-    with open(HASH_RECORD_FILE, 'r') as f:
-        hash_records = json.load(f)
-else:
-    hash_records = {}
+def connect_db():
+    return psycopg2.connect(
+        dbname="boards",
+        user="postgres",
+        password="password",
+        host="localhost"
+    )
 
-def get_image_hash(filepath):
-    """Return SHA256 hash of a file."""
-    h = hashlib.sha256()
-    with open(filepath, 'rb') as f:
-        while chunk := f.read(8192):
-            h.update(chunk)
-    return h.hexdigest()
+def create_table_if_not_exists(cursor):
+    cursor.execute("""
+        CREATE TABLE IF NOT EXISTS image_cache (
+            hash TEXT PRIMARY KEY,
+            link TEXT NOT NULL
+        )
+    """)
 
-def upload_to_imgchest(filepath):
-    """Upload a single image and return the direct image link."""
-    with open(filepath, 'rb') as f:
-        files = {'file': (os.path.basename(filepath), f)}
-        response = requests.post(IMG_CHEST_UPLOAD_URL, headers=HEADERS, files=files)
+def compute_hash(image_path):
+    with open(image_path, "rb") as f:
+        return hashlib.md5(f.read()).hexdigest()
 
-    if response.status_code == 201:
-        data = response.json()
-        return data['data']['direct_url']  # <-- direct image URL
-    else:
-        print(f"Failed to upload {filepath}: {response.text}")
-        return None
+def load_link_by_hash(cursor, hash_val):
+    cursor.execute("SELECT link FROM image_cache WHERE hash = %s", (hash_val,))
+    row = cursor.fetchone()
+    return row[0] if row else None
 
-def process_images(folder):
-    output_links = []
-    for filename in tqdm(os.listdir(folder)):
-        fullpath = os.path.join(folder, filename)
-        if not os.path.isfile(fullpath):
-            continue
-        img_hash = get_image_hash(fullpath)
+def save_link(cursor, hash_val, link):
+    cursor.execute("""
+        INSERT INTO image_cache (hash, link)
+        VALUES (%s, %s)
+        ON CONFLICT (hash) DO NOTHING
+    """, (hash_val, link))
 
-        if img_hash in hash_records:
-            output_links.append(hash_records[img_hash])
-        else:
-            link = upload_to_imgchest(fullpath)
-            if link:
-                hash_records[img_hash] = link
-                output_links.append(link)
+# Based loosely on keikazuki's approach
+def upload_image(image_path):
+    with open(image_path, 'rb') as f:
+        files = {'images[]': (os.path.basename(image_path), f, 'image/jpeg')}
+        data = {'title': os.path.basename(image_path)}
+        resp = requests.post("https://api.imgchest.com/v1/post", headers=HEADERS, files=files, data=data)
 
-    # Save updated hash record
-    with open(HASH_RECORD_FILE, 'w') as f:
-        json.dump(hash_records, f, indent=2)
+    resp.raise_for_status()
+    post_id = resp.json()["data"]["id"]
 
-    return output_links
+    # Now get the image info
+    info = requests.get(f"https://api.imgchest.com/v1/post/{post_id}", headers=HEADERS)
+    info.raise_for_status()
 
-# === Run ===
-if __name__ == "__main__":
-    links = process_images(IMG_FOLDER)
-    print("\nUploaded/Found links:")
-    print("\n".join(links))
+    image_list = info.json()["data"]["images"]
+    if not image_list:
+        raise Exception("No images returned in response")
+
+    return image_list[0]["link"]
+
+def process_images(image_paths):
+    try:
+        conn = connect_db()
+        cur = conn.cursor()
+        create_table_if_not_exists(cur)
+
+        results = []
+
+        for image_path in image_paths:
+            hash_val = compute_hash(image_path)
+            cached_link = load_link_by_hash(cur, hash_val)
+
+            if cached_link:
+                print(f"🔁 Cached: {image_path} → {cached_link}")
+                results.append(cached_link)
+                continue
+
+            try:
+                direct_link = upload_image(image_path)
+                print(f"⬆️ Uploaded {image_path} → {direct_link}")
+                save_link(cur, hash_val, direct_link)
+                print(f"📝 Saved to DB: {hash_val[:10]} → {direct_link}")
+                results.append(direct_link)
+                conn.commit()
+                print("✅ Commit successful.")
+
+            except Exception as e:
+                print(f"❌ Upload error for {image_path}: {e}")
+
+        conn.commit()
+        print("✅ Commit successful.")
+        cur.close()
+        conn.close()
+        return results
+
+    except Exception as e:
+        print(f"❌ Critical DB error: {e}")
+        return []
