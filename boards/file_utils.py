@@ -20,7 +20,7 @@ index_index_path = os.path.join(masterDir, "index-index.html")
 url_path = index_index_path.replace("\\", "/")
 
 # On Windows, add a leading slash for absolute path in href (so browser treats it as root)
-href_link = Path(masterDir, "index-index.html").absolute().as_uri()
+href_link = Path(masterDir, "index.html").absolute().as_uri()
 
 
 
@@ -166,20 +166,20 @@ def create_html_file(media_files, target_file, media_dir, subfolder_name, templa
 
         for idx, uploaded_url in enumerate(uploaded_urls):
             ext = os.path.splitext(media_files[idx])[1].lower()
-            try:
+            if ext in ('.jpg', '.jpeg', '.png'):
                 media_blocks.append(f'''
                     <div class="masonry-item">
-                        <a href="#" onclick="copyToClipboard('{uploaded_url}'); event.preventDefault();">
+                        <a href="{uploaded_url}" onclick="copyToClipboard('{uploaded_url}'); event.preventDefault();">
                             <img src="{uploaded_url}" alt="{media_files[idx]}">
                         </a>
                     </div>
                 ''')
-            except:
-                # most probably happens if it is a video, so no case for images added. yes, bad programming practice.
+            elif ext in ('.mp4', '.avi', '.mov'):
+                local_video_path = os.path.relpath(media_files_full[idx], os.path.dirname(target_file)).replace("\\", "/")
                 media_blocks.append(f'''
                     <div class="masonry-item">
                         <video width="300" controls>
-                            <source src="{full_paths[idx]}" type="video/mp4">
+                            <source src="{uploaded_url}" type="video/mp4">
                             Your browser does not support the video tag.
                         </video>
                     </div>
@@ -311,7 +311,7 @@ def create_master_index_file(directories, output_path):
     content.append("</html>")
 
     os.makedirs(output_path, exist_ok=True)
-    with open(os.path.join(output_path, "index-index.html"), "w", encoding="utf-8") as f:
+    with open(os.path.join(output_path, "index.html"), "w", encoding="utf-8") as f:
         f.write("\n".join(content))
 
 

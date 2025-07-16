@@ -7,7 +7,7 @@ conn = psycopg2.connect(
     host="localhost"
 )
 cursor = conn.cursor()
-cursor.execute("SELECT * FROM image_cache LIMIT 10;")
+cursor.execute("SELECT COUNT(*) FROM image_cache LIMIT 10;")
 rows = cursor.fetchall()
 
 for row in rows:
