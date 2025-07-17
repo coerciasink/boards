@@ -76,7 +76,7 @@ def process_images(image_paths):
             cached_link = load_link_by_hash(cur, hash_val)
 
             if cached_link:
-                print(f"🔁 Cached: {image_path} → {cached_link}")
+                # print(f"🔁 Cached: {image_path} → {cached_link}")
                 results.append(cached_link)
                 continue
 
@@ -84,16 +84,15 @@ def process_images(image_paths):
                 direct_link = upload_image(image_path)
                 print(f"⬆️ Uploaded {image_path} → {direct_link}")
                 save_link(cur, hash_val, direct_link)
-                print(f"📝 Saved to DB: {hash_val[:10]} → {direct_link}")
+                # print(f"📝 Saved to DB: {hash_val[:10]} → {direct_link}")
                 results.append(direct_link)
                 conn.commit()
-                print("✅ Commit successful.")
-
             except Exception as e:
                 print(f"❌ Upload error for {image_path}: {e}")
 
         conn.commit()
-        print("✅ Commit successful.")
+        dir = os.path.dirname(image_paths[0])
+        print(f"Commit successful. for {dir}")
         cur.close()
         conn.close()
         return results

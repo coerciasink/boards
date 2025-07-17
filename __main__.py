@@ -2,11 +2,8 @@ import os
 import yaml
 import argparse
 import time
-import yaml
 
-# from boards.image_utils import get_image_names
 start_time = time.time()
-
 
 from boards.file_utils import create_html_file, create_css_file, create_js_file, create_index_file, create_master_index_file
 from boards.dir_utils import getDirList
@@ -30,7 +27,11 @@ parser.add_argument('--upload', action='store_true', help='Upload images to Imgc
 args = parser.parse_args()
 
 config = load_config()
-masterDir = config["masterDir"]
+
+if args.upload:
+    masterDir = os.path.join(os.path.dirname(config["masterDir"]), 'boardsUpload')
+else:
+    masterDir = config["masterDir"]
 
 # choice = input("which csvs to choose?\n1. misc\n2. SSD files\n3. pinterest\n4. All\n")
 # add more options to include more combinations of csv files. 
