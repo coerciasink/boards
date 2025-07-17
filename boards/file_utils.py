@@ -35,6 +35,8 @@ def create_html_file(media_files, target_file, media_dir, subfolder_name, templa
     if decideUpload:
         media_files_full = []
 
+        href_link = "../index.html"
+
         for idx, media_file in enumerate(media_files):
             full_media_path = full_paths[idx] if full_paths else os.path.join(media_dir, media_file)
             media_files_full.append(full_media_path.replace("\\", "/"))
