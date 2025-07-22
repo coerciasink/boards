@@ -51,23 +51,35 @@ if not csvList:
     print("No CSV files provided. Set them in config.yml or pass using --csvs.")
     exit(1)
 
-
-ranDir = os.path.join(masterDir, "randomised")
-
-if args.random and args.ranDir:
-    try:
-        gen_random(args.dir, args.random, ranDir)
-    except:
-        os.makedirs(ranDir, exist_ok=True)
-        create_css_file(ranDir, config)
-        create_js_file(ranDir)
-        gen_random(args.ranDir, args.random, ranDir)
-    # exit(0)
-
 if args.dir:
     directories = [{'source_directory': args.dir, 'target_directory': os.path.join(masterDir, 'specifiedDir')}]
 else:
     directories = getDirList(csvList, masterDir)
+
+ranDir = masterDir + "randomised"
+
+
+dir = directories[0]['source_directory']
+
+
+if args.random:
+    if not args.ranDir:
+        ranDir = dir 
+    else:
+        ranDir = args.ranDir
+
+    workDir = masterDir + 'randomised'
+
+    # os.makedirs(workDir, exist_ok=True)
+    create_css_file(workDir, config)
+    create_js_file(workDir)
+
+    try:
+        gen_random(dir, args.random, workDir)
+    except Exception as e:
+        print(f"Error: {e}")
+
+
 
 for directory_info in directories:
     source_directory = directory_info["source_directory"]

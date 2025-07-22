@@ -26,7 +26,7 @@ def gen_random(input_dir, count, output_dir):
     selected = random.sample(images, min(count, len(images)))
 
     media_files = [rel for abs, rel in selected]
-    subfolder_name = f"random_{os.path.basename(input_dir)}"
+    subfolder_name = f"{os.path.basename(input_dir)}"
     output_file = os.path.join(output_dir, f"{subfolder_name}.html")
 
     create_html_file(

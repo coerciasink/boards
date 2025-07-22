@@ -17,9 +17,9 @@ HEADERS = {"Authorization": f"Bearer {IMG_CHEST_API_KEY}"}
 # Hardcoded paths
 master_dir = os.path.dirname(__file__)
 csv_files = [
-    "fileLists/misc.csv",
-    # "fileLists/onSsd.csv",
-    "fileLists/pinterest.csv"
+    # "fileLists/misc.csv",
+    "fileLists/onSsd.csv",
+    # "fileLists/pinterest.csv"
 ]
 
 def connect_db():
