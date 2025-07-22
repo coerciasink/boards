@@ -31,3 +31,5 @@ env/
 *.bat
 
 *.txt
+
+.gitignore
