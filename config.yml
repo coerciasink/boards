@@ -1,7 +1,7 @@
 masterDir: "C:/Users/ggggg/Desktop/ssd"
 csvList:
-  # - fileLists/misc.csv
+  - fileLists/misc.csv
   - fileLists/onSsd.csv
-  # - fileLists/pinterest.csv
+  - fileLists/pinterest.csv
 margin: 20
 col_count: 5

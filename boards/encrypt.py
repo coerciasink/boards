@@ -4,6 +4,9 @@ from jinja2 import Template
 from Crypto.Cipher import AES
 import base64
 import hashlib
+import logging
+
+logger = logging.getLogger(__name__) 
 
 # --- Find all .html files in a directory recursively ---
 def find_html_files(directory):

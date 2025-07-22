@@ -33,3 +33,7 @@ env/
 *.txt
 
 .gitignore
+
+# ignore logs
+
+logs/

@@ -2,13 +2,61 @@ import os
 import yaml
 import argparse
 import time
-
 start_time = time.time()
+import logging
+from datetime import date
+# from functools import wraps
+# import boards
+# import inspect
+
+logger = logging.getLogger(__name__)
+
+# def log_function_call(func):
+#     @wraps(func)
+#     def wrapper(*args, **kwargs):
+#         logger.info(f"Entering function: {func.__name__}")
+#         return func(*args, **kwargs)
+#     return wrapper
+
+# def auto_log_all_functions_in_module(namespace):
+#     for name, obj in namespace.items():
+#         if inspect.isfunction(obj):
+#             namespace[name] = log_function_call(obj)
+
+# auto_log_all_functions_in_module(globals())
+# auto_log_all_functions_in_module(vars(boards))
+
+today = date.today()
+
+log_file_path = os.path.join(os.path.dirname(__file__), 'logs', f"{today}.log")
+# logging.basicConfig(filename=log_file_path, level=logging.INFO)
+
+# create cutom logger
+logger = logging.getLogger()
+logger.setLevel(logging.INFO)  # Set the logging level
+
+# File handler
+file_handler = logging.FileHandler(log_file_path, encoding="utf-8", mode='a')
+file_handler.setLevel(logging.INFO)
+
+# Terminal (console) handler
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+
+# Formatter
+formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
+file_handler.setFormatter(formatter)
+console_handler.setFormatter(formatter)
+
+# Add handlers to the logger
+logger.addHandler(file_handler)
+logger.addHandler(console_handler)
+
+
 
 from boards.file_utils import create_html_file, create_css_file, create_js_file, create_index_file, create_master_index_file
 from boards.dir_utils import getDirList
 from boards.ranPick import gen_random
-from boards.imgchest import process_images
 
 
 def load_config(yml_path="config.yml"):
@@ -48,7 +96,7 @@ config = {
 
 
 if not csvList:
-    print("No CSV files provided. Set them in config.yml or pass using --csvs.")
+    logging.info("No CSV files provided. Set them in config.yml or pass using --csvs.")
     exit(1)
 
 if args.dir:
@@ -56,72 +104,70 @@ if args.dir:
 else:
     directories = getDirList(csvList, masterDir)
 
-ranDir = masterDir + "randomised"
 
-
-dir = directories[0]['source_directory']
-
+from boards.dir_utils import getAllFiles
+from boards.ranPick import get_all_images_recursively
 
 if args.random:
     if not args.ranDir:
-        ranDir = dir 
+        imageList = getAllFiles(csvList)
     else:
-        ranDir = args.ranDir
+        imageList = get_all_images_recursively(args.dir)
 
     workDir = masterDir + 'randomised'
 
-    # os.makedirs(workDir, exist_ok=True)
+    os.makedirs(workDir, exist_ok=True)
     create_css_file(workDir, config)
     create_js_file(workDir)
 
     try:
-        gen_random(dir, args.random, workDir)
+        gen_random(imageList, args.random, workDir, workDir)
     except Exception as e:
-        print(f"Error: {e}")
+        logging.info(f"Error: {e}")
 
 
+if not args.random:
+    for directory_info in directories:
+        source_directory = directory_info["source_directory"]
+        target_directory = directory_info["target_directory"]
 
-for directory_info in directories:
-    source_directory = directory_info["source_directory"]
-    target_directory = directory_info["target_directory"]
+        subfolders = {}
 
-    subfolders = {}
+        # Walk through all subfolders
+        for root, _, files in os.walk(source_directory):
+            rel_path = os.path.relpath(root, source_directory)
+            if rel_path == ".":
+                continue  # Skip the base folder itself
 
-    # Walk through all subfolders
-    for root, _, files in os.walk(source_directory):
-        rel_path = os.path.relpath(root, source_directory)
-        if rel_path == ".":
-            continue  # Skip the base folder itself
+            subfolders[rel_path] = sorted(files)
 
-        subfolders[rel_path] = sorted(files)
+        os.makedirs(target_directory, exist_ok=True)
 
-    os.makedirs(target_directory, exist_ok=True)
+        # Create HTML files for each subfolder
+        for subfolder, files in subfolders.items():
+            subfolder_path = os.path.join(source_directory, subfolder)
+            subfolder_file = f"{subfolder.replace(os.sep, '_')}.html"  # Replace slashes with underscores
+            output_file = os.path.join(target_directory, subfolder_file)
 
-    # Create HTML files for each subfolder
-    for subfolder, files in subfolders.items():
-        subfolder_path = os.path.join(source_directory, subfolder)
-        subfolder_file = f"{subfolder.replace(os.sep, '_')}.html"  # Replace slashes with underscores
-        output_file = os.path.join(target_directory, subfolder_file)
+            os.makedirs(os.path.dirname(output_file), exist_ok=True)  #  Ensure parent directory exists
+            # uploaded_links = process_images(files) # upload
 
-        os.makedirs(os.path.dirname(output_file), exist_ok=True)  #  Ensure parent directory exists
-        # uploaded_links = process_images(files) # upload
-
-        create_html_file(files, output_file, subfolder_path, subfolder, decideUpload=args.upload)
-
-
-    # Create main index file linking to all subfolder pages
-    create_index_file(subfolders.keys(), target_directory)
-    # After all individual target directory processing
-    create_master_index_file(directories, masterDir)
+            create_html_file(files, output_file, subfolder_path, subfolder, decideUpload=args.upload)
 
 
-    # Generate CSS & JS (only needed once)
-    create_css_file(target_directory, config)
-    create_js_file(target_directory)
-    print(f"finished with {source_directory}")
+        # Create main index file linking to all subfolder pages
+        create_index_file(subfolders.keys(), target_directory)
+        # After all individual target directory processing
+        create_master_index_file(directories, masterDir)
+
+
+        # Generate CSS & JS (only needed once)
+        create_css_file(target_directory, config)
+        create_js_file(target_directory)
+        logging.info(f"finished with {source_directory}")
 
 create_css_file(masterDir, config)
 create_js_file(masterDir)
 
 elapsed_time = time.time() - start_time
-print(f"\n✅ Finished in {elapsed_time:.2f} seconds.")
+logging.info(f"\n✅ Finished in {elapsed_time:.2f} seconds.")

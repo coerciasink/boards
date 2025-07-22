@@ -5,8 +5,11 @@ import psycopg2
 from jinja2 import Template
 import yaml
 
-from boards.imgchest import process_images
+from boards.imgchest import process_images, compute_hash
 import upload_batch as ub 
+import logging
+
+logger = logging.getLogger(__name__) 
 
 
 def load_config(yml_path="config.yml"):
@@ -37,21 +40,24 @@ def create_html_file(media_files, target_file, media_dir, subfolder_name, templa
 
         href_link = "../index.html"
 
-        for idx, media_file in enumerate(media_files):
-            full_media_path = full_paths[idx] if full_paths else os.path.join(media_dir, media_file)
-            media_files_full.append(full_media_path.replace("\\", "/"))
+        # for idx, media_file in enumerate(media_files):
+        #     full_media_path = full_paths[idx] if full_paths else os.path.join(media_dir, media_file)
+        #     media_files_full.append(full_media_path.replace("\\", "/"))
 
         # ub.upload_all(media_files_full)
 
-        uploaded_urls = process_images(media_files_full)
+        media_files_full = [f.replace("\\", "/") for f in media_files]
+
+        uploaded_urls = process_images(media_files)
 
         for idx, uploaded_url in enumerate(uploaded_urls):
+            hashVal = compute_hash(media_files_full[idx])
             ext = os.path.splitext(media_files[idx])[1].lower()
             if ext in ('.jpg', '.jpeg', '.png'):
                 media_blocks.append(f'''
                     <div class="masonry-item">
-                        <a href="{uploaded_url}" onclick="copyToClipboard('{uploaded_url}'); event.preventDefault();">
-                            <img src="{uploaded_url}" alt="{media_files[idx]}">
+                        <a href="{uploaded_url}" onclick="copyToClipboard('{hashVal}'); event.preventDefault();">
+                            <img src="{uploaded_url}" alt="{media_files[idx]}, {hashVal}">
                         </a>
                     </div>
                 ''')
@@ -61,7 +67,7 @@ def create_html_file(media_files, target_file, media_dir, subfolder_name, templa
                     <div class="masonry-item">
                         <video width="300" controls>
                             <source src="{uploaded_url}" type="video/mp4">
-                            Your browser does not support the video tag.
+                            Your browser does not support the video tag. {hashVal}
                         </video>
                     </div>
                 ''')

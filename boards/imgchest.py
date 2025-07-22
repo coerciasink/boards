@@ -4,6 +4,9 @@ import requests
 from pathlib import Path
 from dotenv import load_dotenv
 import psycopg2
+import logging
+
+logger = logging.getLogger(__name__) 
 
 # Load the .env file
 load_dotenv()
@@ -82,21 +85,21 @@ def process_images(image_paths):
 
             try:
                 direct_link = upload_image(image_path)
-                print(f"⬆️ Uploaded {image_path} → {direct_link}")
+                logging.info(f"⬆️ Uploaded {image_path} → {direct_link}")
                 save_link(cur, hash_val, direct_link)
                 # print(f"📝 Saved to DB: {hash_val[:10]} → {direct_link}")
                 results.append(direct_link)
                 conn.commit()
             except Exception as e:
-                print(f"❌ Upload error for {image_path}: {e}")
+                logging.warning(f"❌ Upload error for {image_path}: {e}")
 
         conn.commit()
         dir = os.path.dirname(image_paths[0])
-        print(f"Commit successful. for {dir}")
+        logging.info(f"Commit successful. for {dir}")
         cur.close()
         conn.close()
         return results
 
     except Exception as e:
-        print(f"❌ Critical DB error: {e}")
+        logging.info(f"❌ Critical DB error: {e}")
         return []
