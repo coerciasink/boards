@@ -5,6 +5,7 @@ import logging
 def load_config(yml_path="config.yml"):
     with open(yml_path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
+from math import ceil
 
 config = load_config()
 logger = logging.getLogger(__name__) 
@@ -21,12 +22,12 @@ def get_all_images_recursively(base_dir):
                 image_paths.append((full_path, rel_path))  # (absolute, relative)
     return image_paths
 
-def gen_random(imageList, count, output_dir, input_dir, paginate=False, page_size=config["page_size"]):
+def gen_random(imageList, count, target_dir, input_dir, paginate=False, page_size=config["page_size"]):
     if not imageList:
         logger.waring("No images found.")
         return
 
-    sampled_images = random.sample(imageList, sample_size)
+    sampled_images = random.sample(imageList, count)
     if paginate:
         total_pages = ceil(len(sampled_images) / page_size)
         for page_num in range(1, total_pages + 1):
@@ -38,7 +39,7 @@ def gen_random(imageList, count, output_dir, input_dir, paginate=False, page_siz
             create_html_file(
                 media_files=paginated,
                 target_file=output_file,
-                media_dir=media_dir,
+                media_dir=input_dir,
                 subfolder_name="random",
                 decideUpload=False,
                 page_num=page_num,
@@ -46,6 +47,6 @@ def gen_random(imageList, count, output_dir, input_dir, paginate=False, page_siz
             )
     else:
         output_file = os.path.join(target_dir, f"random.html")
-        create_html_file(sampled_images, output_file, media_dir, "random", decideUpload=False)
+        create_html_file(sampled_images, output_file, input_dir, "random", decideUpload=False)
 
     logger.info(f"Created: {output_file}")
