@@ -9,7 +9,7 @@ from pathlib import Path
 import logging
 
 log_file_path = os.path.join(os.path.dirname(__file__), "upload.log")
-logging.basicConfig(filename=log_file_path, level=logging.INFO)
+logging.basicConfig(filename=log_file_path, level=logger.info)
 
 load_dotenv()
 
@@ -26,7 +26,7 @@ def connect_db():
     )
 
 def create_table_if_not_exists(cursor):
-    logging.info("[DB] Ensuring image_cache table exists...")
+    logger.info("[DB] Ensuring image_cache table exists...")
     cursor.execute("""
         CREATE TABLE IF NOT EXISTS image_cache (
             hash TEXT PRIMARY KEY,
@@ -35,7 +35,7 @@ def create_table_if_not_exists(cursor):
     """)
 
 def compute_hash(image_path):
-    logging.info(f"[HASH] Computing hash for: {image_path}")
+    logger.info(f"[HASH] Computing hash for: {image_path}")
     with open(image_path, "rb") as f:
         return hashlib.md5(f.read()).hexdigest()
 
@@ -43,9 +43,9 @@ def load_link_by_hash(cursor, hash_val):
     cursor.execute("SELECT link FROM image_cache WHERE hash = %s", (hash_val,))
     row = cursor.fetchone()
     if row:
-        logging.info(f"[CACHE HIT] Found link for hash {hash_val}")
+        logger.info(f"[CACHE HIT] Found link for hash {hash_val}")
     else:
-        logging.info(f"[CACHE MISS] No link found for hash {hash_val}")
+        logger.info(f"[CACHE MISS] No link found for hash {hash_val}")
     return row[0] if row else None
 
 def save_link(cursor, hash_val, link):
@@ -54,10 +54,10 @@ def save_link(cursor, hash_val, link):
         VALUES (%s, %s)
         ON CONFLICT (hash) DO NOTHING
     """, (hash_val, link))
-    logging.info(f"[CACHE SAVE] Saved link to DB: {hash_val} → {link}")
+    logger.info(f"[CACHE SAVE] Saved link to DB: {hash_val} → {link}")
 
 def upload_images(image_paths):
-    logging.info(f"[UPLOAD] Uploading {len(image_paths)} image(s)...")
+    logger.info(f"[UPLOAD] Uploading {len(image_paths)} image(s)...")
     files = []
     for image_path in image_paths:
         with open(image_path, 'rb') as f:
@@ -77,7 +77,7 @@ def upload_images(image_paths):
         raise Exception("Mismatch in uploaded image count")
 
     for path, img in zip(image_paths, image_list):
-        logging.info(f" {path} → {img['link']}")
+        logger.info(f" {path} → {img['link']}")
     return [img["link"] for img in image_list]
 
 def chunked(lst, size):
@@ -99,7 +99,7 @@ def read_file_list(path):
 def write_updated_index(index):
     with open(LIST_FILE_PATH, "r+", encoding='utf-8') as f:
         f.write(f"#{index}\n")
-        logging.info(f"index updated: {index}\n")
+        logger.info(f"index updated: {index}\n")
         # for line in lines:
         #     f.write(line + "\n")
 
@@ -111,27 +111,27 @@ def upload_all():
 
     index, file_paths = read_file_list(LIST_FILE_PATH)
     
-    logging.info(f" Starting from index {index} of {len(file_paths)}")
+    logger.info(f" Starting from index {index} of {len(file_paths)}")
 
     remaining_files = file_paths[index:]
-    logging.info(f"  Processing {len(remaining_files)} files...")
+    logger.info(f"  Processing {len(remaining_files)} files...")
 
     uncached = []
     for path in remaining_files:
         if not os.path.exists(path):
-            logging.info(f" File not found: {path}")
+            logger.info(f" File not found: {path}")
             index += 1
             continue
         uncached.append(path)
 
-    logging.info(f" Ready to upload {len(uncached)} new files")
+    logger.info(f" Ready to upload {len(uncached)} new files")
 
     def try_upload_with_retries(paths_to_upload, retries=3, delay=1):
         for attempt in range(1, retries + 1):
             try:
                 return upload_images(paths_to_upload)
             except Exception as e:
-                logging.info(f" Attempt {attempt} failed: {e}")
+                logger.info(f" Attempt {attempt} failed: {e}")
                 if attempt == retries:
                     raise
                 time.sleep(delay)
@@ -148,18 +148,18 @@ def upload_all():
             conn.commit()
             time.sleep(2)  # optional throttle
         except Exception as e:
-            logging.info(f" Failed batch upload after retries: {e}")
+            logger.info(f" Failed batch upload after retries: {e}")
             break  # stop further uploads
 
         conn.commit()
         write_updated_index(index)
 
-        logging.info(" Upload complete for batch")
+        logger.info(" Upload complete for batch")
         elapsed_time = time.time() - start_time
-        logging.info(f"\n Elapsed time: {elapsed_time:.2f} seconds.")
+        logger.info(f"\n Elapsed time: {elapsed_time:.2f} seconds.")
         filesUploaded = index - indexOriginal
         per_img = int(elapsed_time)/filesUploaded
-        logging.info(f"\n {per_img} seconds.")
+        logger.info(f"\n {per_img} seconds.")
     cur.close()
     conn.close()
 
@@ -169,10 +169,10 @@ if __name__ == "__main__":
     indexOriginal = index
     upload_all()
     elapsed_time = time.time() - start_time
-    logging.info(f"\n Finished in {elapsed_time:.2f} seconds.")
+    logger.info(f"\n Finished in {elapsed_time:.2f} seconds.")
     indexFinal, file_paths = read_file_list(LIST_FILE_PATH)
     filesUploaded = indexFinal - indexOriginal
     per_img = int(elapsed_time)/filesUploaded
 
-    logging.info(f"\n {per_img} seconds.")
+    logger.info(f"\n {per_img} seconds.")
 

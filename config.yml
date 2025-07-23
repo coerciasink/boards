@@ -3,5 +3,11 @@ csvList:
   - fileLists/misc.csv
   - fileLists/onSsd.csv
   - fileLists/pinterest.csv
+imageLists:
+  - imageLists/exampleImageLinks.txt
+  - imageLists/bartolomeobari.txt
+  - imageLists/megumin.txt
 margin: 20
 col_count: 5
+paginate: True
+page_size: 21

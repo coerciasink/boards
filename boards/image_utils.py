@@ -1,8 +1,5 @@
 import os
 import random
-import logging
-
-logger = logging.getLogger(__name__) 
 
 def get_image_names(directory):
     """

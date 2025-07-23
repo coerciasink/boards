@@ -5,98 +5,101 @@ import time
 start_time = time.time()
 import logging
 from datetime import date
-# from functools import wraps
-# import boards
-# import inspect
-
-logger = logging.getLogger(__name__)
-
-# def log_function_call(func):
-#     @wraps(func)
-#     def wrapper(*args, **kwargs):
-#         logger.info(f"Entering function: {func.__name__}")
-#         return func(*args, **kwargs)
-#     return wrapper
-
-# def auto_log_all_functions_in_module(namespace):
-#     for name, obj in namespace.items():
-#         if inspect.isfunction(obj):
-#             namespace[name] = log_function_call(obj)
-
-# auto_log_all_functions_in_module(globals())
-# auto_log_all_functions_in_module(vars(boards))
-
-today = date.today()
-
-log_file_path = os.path.join(os.path.dirname(__file__), 'logs', f"{today}.log")
-# logging.basicConfig(filename=log_file_path, level=logging.INFO)
-
-# create cutom logger
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)  # Set the logging level
-
-# File handler
-file_handler = logging.FileHandler(log_file_path, encoding="utf-8", mode='a')
-file_handler.setLevel(logging.INFO)
-
-# Terminal (console) handler
-console_handler = logging.StreamHandler()
-console_handler.setLevel(logging.INFO)
-
-# Formatter
-formatter = logging.Formatter('%(asctime)s - %(levelname)s - %(message)s')
-file_handler.setFormatter(formatter)
-console_handler.setFormatter(formatter)
-
-# Add handlers to the logger
-logger.addHandler(file_handler)
-logger.addHandler(console_handler)
-
-
-
 from boards.file_utils import create_html_file, create_css_file, create_js_file, create_index_file, create_master_index_file
 from boards.dir_utils import getDirList
 from boards.ranPick import gen_random
+from math import ceil
 
+# set up logger
+today = date.today()
+from boards.log_utils import setup_logger
+logger = setup_logger(__name__)
+logger.info(f"today is {today}, Starting application...")
+   
 
-def load_config(yml_path="config.yml"):
-    with open(yml_path, "r", encoding="utf-8") as f:
-        return yaml.safe_load(f)
-    
-
+# arguments 
 parser = argparse.ArgumentParser(description="Generate HTML for media directories.")
 parser.add_argument('--random', type=int, help="Select N random images from a directory and generate HTML.")
 parser.add_argument('--ranDir', type=str, help="Directory to search images in for --random")
 parser.add_argument('--dir', type=str, help="Directory to use for the images")
 parser.add_argument('--csvs', nargs='+', help='List of CSV files to use')
+parser.add_argument('--useLists', action='store_true', help='use list files from config')
+parser.add_argument('--imageLists', nargs='+', help='List of imagelist files to use. videos can be used too, probably')
 parser.add_argument('--col', type=int, help='number of columns to default to (default is set in the config)')
 parser.add_argument('--margin', type=int, help='Margin in px (default is set in the config)')
 parser.add_argument('--upload', action='store_true', help='Upload images to Imgchest and replace local paths with uploaded URLs')
 args = parser.parse_args()
 
+# config
+def load_config(yml_path="config.yml"):
+    with open(yml_path, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
+
 config = load_config()
 
+configCss = {
+    'col_count': args.col if args.col else config.get("col_count", []),
+    'margin': args.margin if args.margin else config.get("margin", []),
+}
+
+# default case when pagination is not applied
+total_pages = 1 
+page_num = 1
+
+# use lists?
+if args.useLists or args.imageLists:
+    listDir = os.path.join(os.path.dirname(config["masterDir"]), 'imglists')
+    os.makedirs(listDir, exist_ok=True)
+    usingLists = True
+    imgList_List = args.imageLists if args.imageLists else config.get("imageLists", []) # list of list images.
+    base_dir = os.path.dirname(__file__)
+    
+    
+    for imgList in imgList_List:
+        imgListFile = os.path.join(base_dir, imgList)
+        with open(imgListFile, "r", encoding="utf-8") as f:
+            images = [line.strip() for line in f if line.strip()] # essentially removes newlines and empty lines, and each line is a list item of list - images.
+
+        filename = os.path.splitext(os.path.basename(imgListFile))[0]
+        create_css_file(listDir, configCss)
+        create_js_file(listDir)
+
+        if config["paginate"]:
+            page_size = config["page_size"]
+            total_items = len(images)
+            total_pages = ceil(total_items / page_size)
+
+        for page_num in range(1, total_pages + 1):
+
+            start_idx = (page_num - 1) * page_size
+            end_idx = start_idx + page_size
+            paginated_images = images[start_idx:end_idx]            
+
+            output_file = os.path.join(listDir, f"{filename}_page{page_num}.html")
+            
+            logger.info(f"Generating page {page_num}/{total_pages} for {filename}")
+
+            create_html_file(
+                media_files=paginated_images,
+                target_file=output_file,
+                media_dir=listDir,
+                subfolder_name=filename,
+                decideUpload=False,
+                page_num=page_num,
+                total_pages=total_pages
+    )
+    
+
+# upload?
 if args.upload:
     masterDir = os.path.join(os.path.dirname(config["masterDir"]), 'boardsUpload')
 else:
     masterDir = config["masterDir"]
 
-# choice = input("which csvs to choose?\n1. misc\n2. SSD files\n3. pinterest\n4. All\n")
-# add more options to include more combinations of csv files. 
-# choice = 4 # for test puposes
-
-# Determine CSV list
+# get the dir list
 csvList = args.csvs if args.csvs else config.get("csvList", [])
-
-
-config = {
-    'col_count': args.col if args.col else config.get("col_count", []),
-    'margin': args.margin if args.margin else config.get("margin", []),
-}
-
-
 if not csvList:
-    logging.info("No CSV files provided. Set them in config.yml or pass using --csvs.")
+    logger.info("No CSV files provided. Set them in config.yml or pass using --csvs.")
     exit(1)
 
 if args.dir:
@@ -104,29 +107,32 @@ if args.dir:
 else:
     directories = getDirList(csvList, masterDir)
 
-
 from boards.dir_utils import getAllFiles
 from boards.ranPick import get_all_images_recursively
 
+# random ?
 if args.random:
+    logger.info("in args.random")
     if not args.ranDir:
         imageList = getAllFiles(csvList)
     else:
         imageList = get_all_images_recursively(args.dir)
 
-    workDir = masterDir + 'randomised'
+    # workDir = masterDir + 'randomised'
+    workDir = masterDir
+    logger.info(f"{workDir}")
 
     os.makedirs(workDir, exist_ok=True)
-    create_css_file(workDir, config)
+    create_css_file(workDir, configCss)
     create_js_file(workDir)
 
     try:
         gen_random(imageList, args.random, workDir, workDir)
     except Exception as e:
-        logging.info(f"Error: {e}")
+        logger.info(f"Error: {e}")
 
-
-if not args.random:
+# normal case
+if not args.random and not usingLists:
     for directory_info in directories:
         source_directory = directory_info["source_directory"]
         target_directory = directory_info["target_directory"]
@@ -162,12 +168,13 @@ if not args.random:
 
 
         # Generate CSS & JS (only needed once)
-        create_css_file(target_directory, config)
+        create_css_file(target_directory, configCss)
         create_js_file(target_directory)
-        logging.info(f"finished with {source_directory}")
+        logger.info(f"finished with {source_directory}")
 
-create_css_file(masterDir, config)
+# closing stuff
+create_css_file(masterDir, configCss)
 create_js_file(masterDir)
 
 elapsed_time = time.time() - start_time
-logging.info(f"\n✅ Finished in {elapsed_time:.2f} seconds.")
+logger.info(f"\n✅ Finished in {elapsed_time:.2f} seconds.")

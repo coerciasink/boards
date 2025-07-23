@@ -94,3 +94,22 @@ a[href="index.html"] {
   border-radius: 6px;
   box-shadow: 0 1px 4px rgba(0,0,0,0.1);
 }
+
+.pagination {
+    text-align: center;
+    margin-top: 20px;
+}
+.pagination a {
+    display: inline-block;
+    padding: 6px 12px;
+    margin: 0 4px;
+    text-decoration: none;
+    background-color: #eee;
+    color: #333;
+    border-radius: 4px;
+}
+.pagination a.active {
+    font-weight: bold;
+    background-color: #666;
+    color: white;
+}

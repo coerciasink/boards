@@ -1,13 +1,15 @@
-
 import os
 import random
-from boards.file_utils import create_html_file, create_css_file, create_js_file
+from boards.file_utils import create_html_file
 import logging
+def load_config(yml_path="config.yml"):
+    with open(yml_path, "r", encoding="utf-8") as f:
+        return yaml.safe_load(f)
 
+config = load_config()
 logger = logging.getLogger(__name__) 
 
 def get_all_images_recursively(base_dir):
-    # logging.info("in get_all_images_recursively")
     valid_exts = ('.jpg', '.jpeg', '.png')
     image_paths = []
 
@@ -19,27 +21,31 @@ def get_all_images_recursively(base_dir):
                 image_paths.append((full_path, rel_path))  # (absolute, relative)
     return image_paths
 
-
-
-def gen_random(imageList, count, output_dir, input_dir):
-    # images = get_all_images_recursively(input_dir)
+def gen_random(imageList, count, output_dir, input_dir, paginate=False, page_size=config["page_size"]):
     if not imageList:
-        logging.warning("No images found.")
+        logger.waring("No images found.")
         return
 
-    selected = random.sample(imageList, min(count, len(imageList)))
+    sampled_images = random.sample(imageList, sample_size)
+    if paginate:
+        total_pages = ceil(len(sampled_images) / page_size)
+        for page_num in range(1, total_pages + 1):
+            start = (page_num - 1) * page_size
+            end = start + page_size
+            paginated = sampled_images[start:end]
+            output_file = os.path.join(target_dir, f"random_page{page_num}.html")
 
-    # media_files = [rel for abs, rel in selected] # for relative paths
-    media_files = [abs_path for abs_path, _ in selected] # for absolute paths
-    subfolder_name = f"{os.path.basename(input_dir)}"
-    output_file = os.path.join(output_dir, f"{subfolder_name}.html")
+            create_html_file(
+                media_files=paginated,
+                target_file=output_file,
+                media_dir=media_dir,
+                subfolder_name="random",
+                decideUpload=False,
+                page_num=page_num,
+                total_pages=total_pages
+            )
+    else:
+        output_file = os.path.join(target_dir, f"random.html")
+        create_html_file(sampled_images, output_file, media_dir, "random", decideUpload=False)
 
-    create_html_file(
-        media_files=media_files,
-        target_file=output_file,
-        media_dir=input_dir,
-        subfolder_name=subfolder_name,
-        decideUpload=True
-    )
-
-    logging.info(f"Created: {output_file}")
+    logger.info(f"Created: {output_file}")

@@ -5,3 +5,4 @@ pathlib
 pyyaml
 jinja2
 psycopg2
+pillow
