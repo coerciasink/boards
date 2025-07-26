@@ -4,5 +4,5 @@ requests
 pathlib
 pyyaml
 jinja2
-psycopg2
 pillow
+psycopg2-binary

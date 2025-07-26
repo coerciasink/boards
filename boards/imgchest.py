@@ -85,13 +85,13 @@ def process_images(image_paths):
 
             try:
                 direct_link = upload_image(image_path)
-                logger.info(f"⬆️ Uploaded {image_path} → {direct_link}")
+                logger.info(f" Uploaded {image_path} → {direct_link}")
                 save_link(cur, hash_val, direct_link)
-                # print(f"📝 Saved to DB: {hash_val[:10]} → {direct_link}")
+                # print(f" Saved to DB: {hash_val[:10]} → {direct_link}")
                 results.append(direct_link)
                 conn.commit()
             except Exception as e:
-                logger.waring(f"❌ Upload error for {image_path}: {e}")
+                logger.waring(f" Upload error for {image_path}: {e}")
 
         conn.commit()
         dir = os.path.dirname(image_paths[0])
@@ -101,5 +101,5 @@ def process_images(image_paths):
         return results
 
     except Exception as e:
-        logger.info(f"❌ Critical DB error: {e}")
+        logger.info(f" Critical DB error: {e}")
         return []

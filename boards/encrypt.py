@@ -48,7 +48,7 @@ def create_encrypted_html(input_html_path, output_html_path, password, template_
     with open(output_html_path, "w", encoding="utf-8") as f:
         f.write(final_html)
 
-    print(f"🔐 Encrypted: {output_html_path}")
+    print(f" Encrypted: {output_html_path}")
 
 # --- Main script ---
 def main():

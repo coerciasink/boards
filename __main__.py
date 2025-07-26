@@ -206,4 +206,4 @@ create_css_file(masterDir, configCss)
 create_js_file(masterDir)
 
 elapsed_time = time.time() - start_time
-logger.info(f"\n✅ Finished in {elapsed_time:.2f} seconds.")
+logger.info(f"\n Finished in {elapsed_time:.2f} seconds.")
