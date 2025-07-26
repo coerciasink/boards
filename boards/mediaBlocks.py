@@ -30,12 +30,13 @@ def blocksNormal(media_files, media_files_full, media_dir, target_file, full_pat
     media_blocks = []
     for idx, media_file in enumerate(media_files):
         full_media_path = full_paths[idx] if full_paths else os.path.join(media_dir, media_file)
-        absolute_path = full_media_path.replace("\\", "/")
         try:
             media_path = os.path.relpath(full_media_path, os.path.dirname(target_file)).replace("\\", "/")
+            if not media_path.startswith("http") and not media_path.startswith("file:///"):
+                media_path = media_path 
         except ValueError:
-            absolute_path = os.path.abspath(full_media_path)
-            media_path = "file:///" + absolute_path.replace("\\", "/")
+            media_path = "file:///" + os.path.abspath(full_media_path).replace("\\", "/")
+
 
         ext = os.path.splitext(media_file)[1].lower()
         if ext in ('.jpg', '.jpeg', '.png'):

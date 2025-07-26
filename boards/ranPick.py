@@ -1,7 +1,9 @@
 import os
 import random
-from boards.file_utils import create_html_file
+from boards.filemaking.file_utils import create_html_file
 import logging
+import yaml
+
 def load_config(yml_path="config.yml"):
     with open(yml_path, "r", encoding="utf-8") as f:
         return yaml.safe_load(f)
@@ -22,7 +24,7 @@ def get_all_images_recursively(base_dir):
                 image_paths.append((full_path, rel_path))  # (absolute, relative)
     return image_paths
 
-def gen_random(imageList, count, target_dir, input_dir, paginate=False, page_size=config["page_size"]):
+def gen_random(imageList, count, target_dir, input_dir, paginate=False, page_size=config["page_size"], decideUpload=False):
     if not imageList:
         logger.waring("No images found.")
         return
@@ -41,7 +43,7 @@ def gen_random(imageList, count, target_dir, input_dir, paginate=False, page_siz
                 target_file=output_file,
                 media_dir=input_dir,
                 subfolder_name="random",
-                decideUpload=False,
+                decideUpload=decideUpload,
                 page_num=page_num,
                 total_pages=total_pages
             )

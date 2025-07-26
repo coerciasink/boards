@@ -1,0 +1,53 @@
+start
+
+Parse cli arguments
+load config
+setup logging
+
+pagination, default case set.
+
+use image list?
+    set the output html directory to be masterDir + 'imgLists'
+    make the listDir if doesn't exist
+
+    load imageList List
+
+    for imagelist in imagelistlist
+        input imglist file location, calculate
+        make images[] using the lines of the imagelist file
+
+        set output html file
+        create css file
+        create js file
+
+        if paginate, 
+
+
+
+
+If upload, 
+    connect to pg
+    set upload = true
+
+
+
+
+
+
+if not pagination, pages = 1, media per page = 10000 (big number)
+if upload,    
+    hash val to be used in mediablocks
+
+load html template
+load  block template
+load media url/location list
+make an empty media blocks list.
+for url in list, loop
+    substitute the url in block template
+    Substitute the hashval if upload
+    append the block to media_blocks list
+
+Substitute title
+Substitute media_blocks in html template
+
+Add pagination logic

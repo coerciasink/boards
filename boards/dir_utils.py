@@ -1,6 +1,6 @@
 import shutil
 import os
-from boards.file_utils import create_html_file, create_css_file, create_js_file
+from boards.filemaking.file_utils import create_html_file, create_css_file, create_js_file
 from boards.ranPick import get_all_images_recursively
 import csv
 import logging

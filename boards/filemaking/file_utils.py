@@ -10,13 +10,7 @@ from boards.mediaBlocks import blocksForUpload, blocksNormal
 import extraFiles.upload_batch as ub 
 import logging
 
-from PIL import Image
-
-
-
-
 logger = logging.getLogger(__name__) 
-
 
 def load_config(yml_path="config.yml"):
     with open(yml_path, "r", encoding="utf-8") as f:
@@ -29,67 +23,14 @@ index_index_path = os.path.join(masterDir, "index-index.html")
 
 url_path = index_index_path.replace("\\", "/")
 
-# On Windows, add a leading slash for absolute path in href (so browser treats it as root)
-# href_link = Path(masterDir, "index.html").absolute().as_uri()
+# href_link = Path(masterDir, "index.html").absolute().as_uri() # this is a an absolute path link for the back to index link
 href_link = "../index.html"
 
-
-
-
-def create_html_file(media_files, target_file, media_dir, subfolder_name,
-                      template_path='templates/template.html', full_paths=None, 
-                      decideUpload=False, page_num=1, total_pages=1):
+def makeHtmlBoard(media_files, target_file, media_dir, subfolder_name,
+                    template_path='templates/template.html', full_paths=None, 
+                    decideUpload=False, page_num=1, total_pages=1):
+    return
     
-    logger.info("media_files:", media_files)
-    logger.info("upload?", decideUpload)
-    with open(template_path, "r", encoding="utf-8") as template:
-        html_template = template.read()
-    
-    pagination = config["paginate"]
-
-    pagination_html = ""
-
-    if total_pages > 1:
-        pagination_html += '<div class="pagination">\n'
-
-        if page_num > 1:
-            pagination_html += f'<a href="{subfolder_name}_page{page_num-1}.html">&laquo; Prev</a>\n'
-
-        for i in range(1, total_pages + 1):
-            cls = 'active' if i == page_num else ''
-            pagination_html += f'<a href="{subfolder_name}_page{i}.html" class="{cls}">{i}</a>\n'
-
-        if page_num < total_pages:
-            pagination_html += f'<a href="{subfolder_name}_page{page_num+1}.html">Next &raquo;</a>\n'
-
-        pagination_html += '</div>'
-
-    media_files_full = []
-    for idx, media_file in enumerate(media_files):
-        full_media_path = full_paths[idx] if full_paths else os.path.join(media_dir, media_file)
-        media_files_full.append(full_media_path.replace("\\", "/"))
-
-    if len(media_files) != len(media_files_full):
-        logger.warning(f"Length mismatch: media_files={len(media_files)}, media_files_full={len(media_files_full)}")
-
-
-    if decideUpload:
-        # href_link = "../index.html"
-        uploaded_urls = process_images(media_files)
-        media_blocks = blocksForUpload(media_files, media_files_full, uploaded_urls, target_file)
-
-    else:
-        media_blocks = blocksNormal(media_files, media_files_full, media_dir, target_file, full_paths)
-
-    html_content = html_template.replace("{{title}}", subfolder_name)
-    html_content = html_content.replace("{{media_content}}", "\n".join(media_blocks))
-    if pagination:
-        html_content = html_content.replace("{{pagination}}", pagination_html)
-    else:
-        html_content = html_content.replace("{{pagination}}", '')
-
-    with open(target_file, "w", encoding="utf-8") as f:
-        f.write(html_content)
 
 
 

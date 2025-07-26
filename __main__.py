@@ -5,10 +5,12 @@ import time
 start_time = time.time()
 import logging
 from datetime import date
-from boards.file_utils import create_html_file, create_css_file, create_js_file, create_index_file, create_master_index_file
+from boards.filemaking.file_utils import create_html_file, create_css_file, create_js_file, create_index_file, create_master_index_file
 from boards.dir_utils import getDirList
 from boards.ranPick import gen_random
 from math import ceil
+import traceback
+
 
 # set up logger
 today = date.today()
@@ -92,6 +94,7 @@ if args.useLists or args.imageLists:
 
 # upload?
 if args.upload:
+    logger.info("upload case")
     masterDir = os.path.join(os.path.dirname(config["masterDir"]), 'boardsUpload')
 else:
     masterDir = config["masterDir"]
@@ -112,7 +115,7 @@ from boards.ranPick import get_all_images_recursively
 
 # random ?
 if args.random:
-    logger.info("in args.random")
+    logger.info("random case")
     if not args.ranDir:
         imageList = getAllFiles(csvList)
     else:
@@ -126,13 +129,19 @@ if args.random:
     create_css_file(workDir, configCss)
     create_js_file(workDir)
 
+    decideUpload = args.upload
+
+    logger.info("upload? %s", decideUpload)
+
     try:
-        gen_random(imageList, args.random, workDir, workDir)
+        gen_random(imageList, args.random, workDir, workDir, paginate=config["paginate"], page_size=config["page_size"], decideUpload=decideUpload)
     except Exception as e:
         logger.info(f"Error: {e}")
+        logger.error(traceback.format_exc())
 
 # normal case
 if not args.random and not usingLists:
+    logger.info("normal case")
     for directory_info in directories:
         source_directory = directory_info["source_directory"]
         target_directory = directory_info["target_directory"]
@@ -158,7 +167,27 @@ if not args.random and not usingLists:
             os.makedirs(os.path.dirname(output_file), exist_ok=True)  #  Ensure parent directory exists
             # uploaded_links = process_images(files) # upload
 
-            create_html_file(files, output_file, subfolder_path, subfolder, decideUpload=args.upload)
+            if config["paginate"]:
+                page_size = config["page_size"]
+                total_pages = ceil(len(files) / page_size)
+                for page_num in range(1, total_pages + 1):
+                    start_idx = (page_num - 1) * page_size
+                    end_idx = start_idx + page_size
+                    paginated_files = files[start_idx:end_idx]
+
+                    output_file = os.path.join(target_directory, f"{subfolder.replace(os.sep, '_')}_page{page_num}.html")
+
+                    create_html_file(
+                        media_files=paginated_files,
+                        target_file=output_file,
+                        media_dir=subfolder_path,
+                        subfolder_name=subfolder,
+                        decideUpload=args.upload,
+                        page_num=page_num,
+                        total_pages=total_pages
+                    )
+            else:
+                create_html_file(files, output_file, subfolder_path, subfolder, decideUpload=args.upload)
 
 
         # Create main index file linking to all subfolder pages
